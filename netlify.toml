@@ -1,0 +1,11 @@
+[build]
+  base    = "frontend"          # Netlify runs all commands from this folder
+  command = "npm install && npm run build"
+  publish = ".next"             # Next.js output directory
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Required for Next.js middleware, API routes, and SSR on Netlify
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

@@ -7,6 +7,11 @@ const nextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
+      {
+        // Allow Supabase storage images in production
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
     ],
   },
 };
