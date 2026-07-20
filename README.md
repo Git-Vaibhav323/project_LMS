@@ -144,7 +144,7 @@ Then open `http://localhost:3000`.
 | `JWT_EXPIRES_IN`    | Token lifetime                                 | `7d`                                                           |
 | `CLIENT_ORIGIN`     | Allowed CORS origin                            | `http://localhost:3000`                                       |
 | `UPLOAD_DIR`        | Folder for uploaded files                      | `uploads`                                                      |
-| `MAX_FILE_SIZE_MB`  | Max upload size                                | `10`                                                           |
+
 
 **frontend/.env.local**
 
