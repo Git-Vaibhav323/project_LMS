@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: faculty-cms-backend
+    runtime: node
+    rootDir: backend
+    region: singapore   # closest to ap-northeast-1 (Tokyo) where your Supabase DB lives
+    plan: free
+
+    buildCommand: npm install && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+
+    healthCheckPath: /health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+
+      # --- Fill these in Render dashboard (keep secrets out of git) ---
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: "7d"
+      - key: CLIENT_ORIGIN
+        sync: false          # set to your Vercel frontend URL after deploy
+      - key: MAX_FILE_SIZE_MB
+        value: "10"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: "faculty-files"
