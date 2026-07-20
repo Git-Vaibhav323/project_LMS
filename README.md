@@ -1,4 +1,4 @@
-# Faculty Content Management System
+# Faculty LMS
 
 A production-quality full-stack web app that lets faculty members register, log in, and
 upload, organize, search, and manage their teaching content (lecture notes, assignments,
