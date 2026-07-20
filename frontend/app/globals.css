@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 150 10% 96%;
+    --foreground: 205 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 205 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 205 25% 12%;
+
+    --primary: 210 48% 26%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 200 18% 92%;
+    --secondary-foreground: 210 45% 20%;
+
+    --muted: 195 14% 91%;
+    --muted-foreground: 210 10% 40%;
+
+    --accent: 38 48% 47%;
+    --accent-foreground: 40 65% 10%;
+
+    --destructive: 9 48% 40%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 150 35% 30%;
+    --success-foreground: 0 0% 98%;
+
+    --border: 200 16% 85%;
+    --input: 200 16% 85%;
+    --ring: 210 48% 26%;
+
+    --brass: 38 48% 47%;
+
+    --radius: 0.6rem;
+  }
+
+  .dark {
+    --background: 205 22% 8%;
+    --foreground: 200 15% 92%;
+
+    --card: 205 20% 11%;
+    --card-foreground: 200 15% 92%;
+
+    --popover: 205 20% 11%;
+    --popover-foreground: 200 15% 92%;
+
+    --primary: 210 55% 64%;
+    --primary-foreground: 210 45% 12%;
+
+    --secondary: 205 15% 17%;
+    --secondary-foreground: 200 15% 90%;
+
+    --muted: 205 15% 16%;
+    --muted-foreground: 205 10% 65%;
+
+    --accent: 38 55% 58%;
+    --accent-foreground: 40 60% 10%;
+
+    --destructive: 9 55% 56%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 150 40% 48%;
+    --success-foreground: 150 45% 8%;
+
+    --border: 205 15% 20%;
+    --input: 205 15% 20%;
+    --ring: 210 55% 64%;
+
+    --brass: 38 55% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  /* Signature element: a "catalog card" edge used on content cards — a
+     faint perforation-style top border reminiscent of library index cards. */
+  .catalog-edge {
+    background-image: repeating-linear-gradient(
+      90deg,
+      hsl(var(--border)) 0px,
+      hsl(var(--border)) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+    height: 2px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+}

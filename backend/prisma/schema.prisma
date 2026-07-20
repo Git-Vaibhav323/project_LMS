@@ -1,0 +1,39 @@
+// Prisma schema for the Faculty Content Management System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Faculty {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  contents  Content[]
+
+  @@map("faculties")
+}
+
+model Content {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  dueDate     DateTime?
+  fileUrl     String?
+  fileName    String?
+  fileType    String?
+  faculty     Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  facultyId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([facultyId])
+  @@map("contents")
+}
