@@ -12,18 +12,13 @@ if (!SUPABASE_JWT_SECRET) {
 const JWT_SECRET_BUFFER = Buffer.from(SUPABASE_JWT_SECRET, "base64");
 
 interface SupabaseJwtPayload {
-  sub: string;   // Supabase user UUID
+  sub: string;
   email: string;
   role: string;
   iat: number;
   exp: number;
 }
 
-/**
- * Verifies the Supabase-issued JWT from the Authorization header.
- * On success, attaches faculty identity to req.faculty using the
- * Supabase user ID as facultyId (matches Faculty.id in our DB).
- */
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
 
@@ -39,13 +34,25 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     return;
   }
 
+  // Try base64-decoded secret first, then raw string as fallback
+  // This handles both Supabase JWT secret formats
+  let decoded: SupabaseJwtPayload | null = null;
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET_BUFFER) as SupabaseJwtPayload;
-    req.faculty = { facultyId: decoded.sub, email: decoded.email };
-    next();
+    decoded = jwt.verify(token, JWT_SECRET_BUFFER) as SupabaseJwtPayload;
   } catch {
-    sendError(res, 401, "Session expired or invalid. Please log in again.");
+    try {
+      decoded = jwt.verify(token, SUPABASE_JWT_SECRET) as SupabaseJwtPayload;
+    } catch (err2) {
+      const msg = err2 instanceof Error ? err2.message : String(err2);
+      console.error("[auth] JWT verify failed:", msg);
+      sendError(res, 401, "Session expired or invalid. Please log in again.");
+      return;
+    }
   }
+
+  req.faculty = { facultyId: decoded.sub, email: decoded.email };
+  next();
 }
 
 export default requireAuth;
