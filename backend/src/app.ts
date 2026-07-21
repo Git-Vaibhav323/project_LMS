@@ -11,6 +11,7 @@ const app: Application = express();
 // Also accept localhost for local development regardless of env vars.
 const allowedOrigins = new Set([
   process.env.CLIENT_ORIGIN || "http://localhost:3000",
+  "https://lmsfacultyproject.netlify.app",  // production frontend
   "http://localhost:3000",
   "http://localhost:3001",
 ]);
