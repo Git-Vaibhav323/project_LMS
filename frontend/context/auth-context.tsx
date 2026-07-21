@@ -10,10 +10,11 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { authService } from "@/services/auth.service";
 import { ApiRequestError } from "@/services/api";
 import { AUTH_COOKIE_KEY } from "@/lib/constants";
-import { deleteCookie, getCookie, setCookie } from "@/lib/cookies";
+import { deleteCookie, setCookie } from "@/lib/cookies";
 import { Faculty } from "@/lib/types";
 
 interface AuthContextValue {
@@ -31,34 +32,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const loadProfile = useCallback(async () => {
-    const token = getCookie(AUTH_COOKIE_KEY);
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      const res = await authService.me();
-      setFaculty(res.data);
-    } catch (err) {
-      deleteCookie(AUTH_COOKIE_KEY);
-      setFaculty(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    loadProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // On mount, restore session from Supabase (handles page reloads)
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        // Store token in cookie so Next.js middleware can read it for route protection
+        setCookie(AUTH_COOKIE_KEY, data.session.access_token);
+        authService.me()
+          .then((res) => setFaculty(res.data))
+          .catch(() => {
+            deleteCookie(AUTH_COOKIE_KEY);
+          })
+          .finally(() => setIsLoading(false));
+      } else {
+        deleteCookie(AUTH_COOKIE_KEY);
+        setIsLoading(false);
+      }
+    });
+
+    // Keep token cookie in sync when Supabase refreshes the session automatically
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setCookie(AUTH_COOKIE_KEY, session.access_token);
+      } else {
+        deleteCookie(AUTH_COOKIE_KEY);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const login = useCallback(
     async (email: string, password: string) => {
       const res = await authService.login({ email, password });
-      setCookie(AUTH_COOKIE_KEY, res.data.token);
-      setFaculty(res.data.faculty);
-      toast.success("Welcome back", { description: `Signed in as ${res.data.faculty.email}` });
+      setCookie(AUTH_COOKIE_KEY, res.token);
+      setFaculty(res.faculty);
+      toast.success("Welcome back", { description: `Signed in as ${res.faculty.email}` });
       router.push("/dashboard");
     },
     [router]
@@ -67,8 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(
     async (name: string, email: string, password: string) => {
       const res = await authService.register({ name, email, password });
-      setCookie(AUTH_COOKIE_KEY, res.data.token);
-      setFaculty(res.data.faculty);
+      setCookie(AUTH_COOKIE_KEY, res.token);
+      setFaculty(res.faculty);
       toast.success("Account created", { description: "Your faculty account is ready." });
       router.push("/dashboard");
     },
@@ -78,8 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await authService.logout();
-    } catch (err) {
-      // Even if the network call fails, we still clear the local session.
+    } catch {
+      // Even if Supabase call fails, clear local session
     } finally {
       deleteCookie(AUTH_COOKIE_KEY);
       setFaculty(null);

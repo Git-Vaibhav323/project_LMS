@@ -1,14 +1,12 @@
 import { Router } from "express";
-import { getMe, login, logout, register } from "../controllers/auth.controller";
+import { getMe, logout, syncFaculty } from "../controllers/auth.controller";
 import { requireAuth } from "../middlewares/auth.middleware";
-import { validate } from "../middlewares/validate.middleware";
-import { loginSchema, registerSchema } from "../validators/auth.validator";
 
 const router = Router();
 
-router.post("/register", validate(registerSchema), register);
-router.post("/login", validate(loginSchema), login);
-router.post("/logout", requireAuth, logout);
+// All routes require a valid Supabase JWT
+router.post("/sync", requireAuth, syncFaculty);   // called after signUp
 router.get("/me", requireAuth, getMe);
+router.post("/logout", requireAuth, logout);
 
 export default router;
