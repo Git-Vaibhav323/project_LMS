@@ -8,6 +8,9 @@ if (!SUPABASE_JWT_SECRET) {
   throw new Error("SUPABASE_JWT_SECRET is not defined in environment variables.");
 }
 
+// Supabase JWT secrets are base64-encoded — decode to raw bytes for verification
+const JWT_SECRET_BUFFER = Buffer.from(SUPABASE_JWT_SECRET, "base64");
+
 interface SupabaseJwtPayload {
   sub: string;   // Supabase user UUID
   email: string;
@@ -37,7 +40,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 
   try {
-    const decoded = jwt.verify(token, SUPABASE_JWT_SECRET) as SupabaseJwtPayload;
+    const decoded = jwt.verify(token, JWT_SECRET_BUFFER) as SupabaseJwtPayload;
     req.faculty = { facultyId: decoded.sub, email: decoded.email };
     next();
   } catch {
