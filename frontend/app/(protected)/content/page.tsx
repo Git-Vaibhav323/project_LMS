@@ -38,11 +38,11 @@ export default function ContentLibraryPage() {
         <div>
           <h1 className="font-display text-3xl font-semibold">My Content</h1>
           <p className="mt-1 text-muted-foreground">
-            Search, filter, and manage everything you&apos;ve uploaded.
+            Everything you&apos;ve uploaded, in one searchable shelf.
           </p>
         </div>
-        <Link href="/content/new">
-          <Button variant="accent" className="gap-2">
+        <Link href="/content/new" className="w-full sm:w-auto">
+          <Button variant="accent" className="w-full gap-2 sm:w-auto">
             <Plus className="h-4 w-4" />
             Upload Content
           </Button>

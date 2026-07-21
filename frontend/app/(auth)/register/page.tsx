@@ -48,7 +48,7 @@ export default function RegisterPage() {
       <div className="space-y-1.5 text-center md:text-left">
         <h2 className="font-display text-2xl font-semibold">Create your account</h2>
         <p className="text-sm text-muted-foreground">
-          Register as faculty to start managing your teaching content.
+          Takes less than a minute — then your archive is ready whenever you are.
         </p>
       </div>
 

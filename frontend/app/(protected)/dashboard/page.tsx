@@ -40,6 +40,13 @@ export default function DashboardPage() {
   }, []);
 
   const firstName = faculty?.name?.split(" ")[0] ?? "there";
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const subline =
+    total === 0
+      ? "Your archive is a blank page — let's add the first thing to it."
+      : "Here's a quick look at what you've got so far.";
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -53,14 +60,12 @@ export default function DashboardPage() {
             })}
           </p>
           <h1 className="mt-1 font-display text-3xl font-semibold">
-            Welcome back, {firstName}
+            {greeting}, {firstName}
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            Here&apos;s what&apos;s in your content archive.
-          </p>
+          <p className="mt-1 text-muted-foreground">{subline}</p>
         </div>
-        <Link href="/content/new">
-          <Button size="lg" variant="accent" className="gap-2">
+        <Link href="/content/new" className="w-full sm:w-auto">
+          <Button size="lg" variant="accent" className="w-full gap-2 sm:w-auto">
             <Plus className="h-4 w-4" />
             Upload Content
           </Button>

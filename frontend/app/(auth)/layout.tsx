@@ -1,4 +1,22 @@
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, FolderOpen, Search, Share2 } from "lucide-react";
+
+const HIGHLIGHTS = [
+  {
+    icon: FolderOpen,
+    title: "One home for everything",
+    body: "Lecture notes, assignments, syllabi, and papers — kept together instead of scattered across drives and inboxes.",
+  },
+  {
+    icon: Search,
+    title: "Find it in seconds",
+    body: "Search and sort your archive so last semester's material is never more than a few keystrokes away.",
+  },
+  {
+    icon: Share2,
+    title: "Ready when students are",
+    body: "Attach files, set submission dates, and share what matters without the usual back-and-forth.",
+  },
+];
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,24 +33,40 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-foreground/10">
             <GraduationCap className="h-5 w-5" />
           </div>
-          <span className="font-display text-lg font-semibold">Faculty CMS</span>
+          <span className="font-display text-lg font-semibold">Faculty LMS</span>
         </div>
 
-        <div className="relative max-w-md space-y-4">
-          <p className="font-mono text-xs uppercase tracking-widest text-primary-foreground/60">
-            Est. for the modern faculty archive
-          </p>
-          <h1 className="font-display text-4xl font-semibold leading-tight">
-            Every lecture, syllabus, and paper — catalogued in one place.
-          </h1>
-          <p className="text-primary-foreground/70">
-            Upload your course materials once, and keep them organized, searchable, and ready
-            to share whenever your students or colleagues need them.
-          </p>
+        <div className="relative max-w-md space-y-8">
+          <div className="space-y-4">
+            <p className="font-mono text-xs uppercase tracking-widest text-primary-foreground/60">
+              Built for the way faculty actually work
+            </p>
+            <h1 className="font-display text-4xl font-semibold leading-tight">
+              Your course material, finally in one calm place.
+            </h1>
+            <p className="text-primary-foreground/70">
+              Spend less time hunting for files and more time teaching. Faculty LMS keeps
+              everything you hand out to a class organized, searchable, and easy to share.
+            </p>
+          </div>
+
+          <ul className="space-y-4">
+            {HIGHLIGHTS.map(({ icon: Icon, title, body }) => (
+              <li key={title} className="flex gap-3">
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary-foreground/10">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium leading-tight">{title}</p>
+                  <p className="mt-1 text-sm text-primary-foreground/60">{body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <p className="relative font-mono text-xs text-primary-foreground/50">
-          © {new Date().getFullYear()} Faculty Content Management System
+          © {new Date().getFullYear()} Faculty LMS · Made for educators
         </p>
       </div>
 

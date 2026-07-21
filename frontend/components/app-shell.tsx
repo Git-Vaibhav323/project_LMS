@@ -10,8 +10,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/content", label: "My Content", icon: Library },
+  { href: "/dashboard", label: "Dashboard", mobileLabel: "Home", icon: LayoutDashboard },
+  { href: "/content", label: "My Content", mobileLabel: "Content", icon: Library },
 ];
 
 function initials(name: string) {
@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <GraduationCap className="h-4.5 w-4.5" />
           </div>
           <span className="font-display text-base font-semibold tracking-tight">
-            Faculty CMS
+            Faculty LMS
           </span>
         </div>
 
@@ -71,32 +71,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="border-t border-border p-4">
           <div className="flex items-center gap-3">
             <Avatar className="h-9 w-9">
-              <AvatarFallback>{faculty ? initials(faculty.name) : "FC"}</AvatarFallback>
+              <AvatarFallback>{faculty ? initials(faculty.name) : "FL"}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{faculty?.name ?? "Loading..."}</p>
               <p className="truncate text-xs text-muted-foreground">{faculty?.email}</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-3 w-full justify-start gap-2 text-muted-foreground"
-            onClick={() => logout()}
-          >
-            <LogOut className="h-4 w-4" />
-            Log out
-          </Button>
+          <div className="mt-3 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1 justify-start gap-2 text-muted-foreground"
+              onClick={() => logout()}
+            >
+              <LogOut className="h-4 w-4" />
+              Log out
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 md:hidden">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <GraduationCap className="h-4.5 w-4.5" />
-            </div>
-            <span className="font-display text-base font-semibold">Faculty CMS</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <GraduationCap className="h-4.5 w-4.5" />
+          </div>
+            <span className="font-display text-base font-semibold">Faculty LMS</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -106,21 +109,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <div className="hidden items-center justify-between border-b border-border px-8 py-3 md:flex">
-          <nav className="flex gap-4 md:hidden">
-            {NAV_ITEMS.map((item) => (
-              <Link key={item.href} href={item.href} className="text-sm font-medium">
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div />
-          <ThemeToggle />
-        </div>
+        <main className="flex-1 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-8">{children}</main>
 
-        <main className="flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
-
-        <nav className="sticky bottom-0 z-40 flex items-center justify-around border-t border-border bg-card py-2 md:hidden">
+        <nav className="sticky bottom-0 z-40 flex items-center justify-around border-t border-border bg-card/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur supports-[backdrop-filter]:bg-card/80 md:hidden">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href || pathname?.startsWith(item.href + "/");
             const Icon = item.icon;
@@ -129,18 +120,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-4 py-1 text-xs",
+                  "flex flex-1 flex-col items-center gap-1 py-1 text-[11px] font-medium",
                   active ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 <Icon className="h-5 w-5" />
-                {item.label}
+                {item.mobileLabel ?? item.label}
               </Link>
             );
           })}
           <Link
             href="/content/new"
-            className="flex flex-col items-center gap-1 px-4 py-1 text-xs text-accent"
+            className="flex flex-1 flex-col items-center gap-1 py-1 text-[11px] font-medium text-accent"
           >
             <Plus className="h-5 w-5" />
             Upload

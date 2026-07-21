@@ -39,7 +39,7 @@ export default function LoginPage() {
       <div className="space-y-1.5 text-center md:text-left">
         <h2 className="font-display text-2xl font-semibold">Welcome back</h2>
         <p className="text-sm text-muted-foreground">
-          Sign in to your faculty account to manage your content.
+          Good to see you again. Sign in to pick up where you left off.
         </p>
       </div>
 
@@ -82,15 +82,11 @@ export default function LoginPage() {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have a faculty account?{" "}
+        New here?{" "}
         <Link href="/register" className="font-medium text-primary hover:underline">
-          Create one
+          Create a faculty account
         </Link>
       </p>
-
-      <div className="rounded-md border border-dashed border-border p-3 text-center font-mono text-xs text-muted-foreground">
-        Demo account: faculty@university.edu / Password123!
-      </div>
     </div>
   );
 }

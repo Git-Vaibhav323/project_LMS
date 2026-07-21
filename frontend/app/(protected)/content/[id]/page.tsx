@@ -136,7 +136,7 @@ export default function ContentDetailPage() {
 
       <Card className="overflow-hidden">
         <div className="catalog-edge" />
-        <CardContent className="space-y-6 p-8">
+        <CardContent className="space-y-6 p-5 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {content.dueDate ? (
               <Badge variant="accent" className="flex items-center gap-1.5">

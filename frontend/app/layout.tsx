@@ -26,9 +26,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Faculty CMS | Content Management for Educators",
+  title: "Faculty LMS | A calmer home for your course material",
   description:
-    "Upload, organize, and share your teaching materials, research, and course content in one place.",
+    "Faculty LMS gives college educators one tidy place to upload, organize, and share lecture notes, assignments, syllabi, and research — so nothing gets lost between semesters.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
