@@ -7,9 +7,22 @@ import { errorHandler, notFoundHandler } from "./middlewares/error.middleware";
 const app: Application = express();
 
 // --- Core middleware ---
+// Accept requests from the configured frontend origin.
+// Also accept localhost for local development regardless of env vars.
+const allowedOrigins = new Set([
+  process.env.CLIENT_ORIGIN || "http://localhost:3000",
+  "http://localhost:3000",
+  "http://localhost:3001",
+]);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, Postman, mobile apps)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.has(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin '${origin}' not allowed`));
+    },
     credentials: true,
   })
 );
