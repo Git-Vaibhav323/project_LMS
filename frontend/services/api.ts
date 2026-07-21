@@ -1,5 +1,6 @@
 import { API_BASE_URL, AUTH_COOKIE_KEY } from "@/lib/constants";
 import { getCookie } from "@/lib/cookies";
+import { supabase } from "@/lib/supabase";
 import { ApiSuccess } from "@/lib/types";
 
 export class ApiRequestError extends Error {
@@ -23,12 +24,20 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
 }
 
 /**
- * Thin wrapper around fetch that:
- * - Prefixes the backend base URL
- * - Attaches the Bearer token (when auth !== false)
- * - JSON-encodes plain object bodies (leaves FormData untouched)
- * - Normalizes errors into ApiRequestError with field-level details
+ * Get the best available auth token:
+ * 1. Try Supabase session directly (always fresh, handles token refresh)
+ * 2. Fall back to cookie (set during login for middleware route protection)
  */
+async function getToken(): Promise<string | null> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.access_token) return data.session.access_token;
+  } catch {
+    // Supabase not available — fall back to cookie
+  }
+  return getCookie(AUTH_COOKIE_KEY);
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {}
@@ -45,8 +54,8 @@ export async function apiFetch<T>(
     finalBody = JSON.stringify(body);
   }
 
-  if (auth) {
-    const token = getCookie(AUTH_COOKIE_KEY);
+  if (auth && !finalHeaders.has("Authorization")) {
+    const token = await getToken();
     if (token) {
       finalHeaders.set("Authorization", `Bearer ${token}`);
     }
