@@ -39,10 +39,10 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   let decoded: SupabaseJwtPayload | null = null;
 
   try {
-    decoded = jwt.verify(token, JWT_SECRET_BUFFER) as SupabaseJwtPayload;
+    decoded = jwt.verify(token, JWT_SECRET_BUFFER, { algorithms: ["HS256"] }) as SupabaseJwtPayload;
   } catch {
     try {
-      decoded = jwt.verify(token, SUPABASE_JWT_SECRET) as SupabaseJwtPayload;
+      decoded = jwt.verify(token, SUPABASE_JWT_SECRET, { algorithms: ["HS256"] }) as SupabaseJwtPayload;
     } catch (err2) {
       const msg = err2 instanceof Error ? err2.message : String(err2);
       console.error("[auth] JWT verify failed:", msg);
