@@ -57,6 +57,31 @@ async function getToken(forceRefresh = false): Promise<string | null> {
   return null;
 }
 
+/**
+ * The backend runs on a free host that spins down when idle. The first request
+ * after a spin-down can fail at the network layer (connection timeout / reset)
+ * while the instance wakes up (~30-60s). A thrown fetch (TypeError) means the
+ * server was unreachable — as opposed to an HTTP error response, which resolves
+ * normally. We retry those network failures with backoff so a cold start
+ * recovers transparently instead of surfacing "Failed to fetch" on the UI.
+ */
+const COLD_START_RETRY_DELAYS_MS = [2000, 5000, 9000];
+
+async function fetchWithWake(url: string, init: RequestInit): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= COLD_START_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastError = err;
+      const delay = COLD_START_RETRY_DELAYS_MS[attempt];
+      if (delay === undefined) break;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {}
@@ -83,7 +108,7 @@ export async function apiFetch<T>(
       const token = await getToken(forceRefresh);
       if (token) finalHeaders.set("Authorization", `Bearer ${token}`);
     }
-    return fetch(`${API_BASE_URL}${path}`, {
+    return fetchWithWake(`${API_BASE_URL}${path}`, {
       ...rest,
       headers: finalHeaders,
       body: finalBody,
