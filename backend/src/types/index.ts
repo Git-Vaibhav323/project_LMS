@@ -1,6 +1,7 @@
 export interface AuthenticatedFaculty {
   facultyId: string;
   email: string;
+  name?: string;
 }
 
 export interface RegisterInput {

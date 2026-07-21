@@ -1,5 +1,5 @@
 import { API_BASE_URL, AUTH_COOKIE_KEY } from "@/lib/constants";
-import { getCookie } from "@/lib/cookies";
+import { deleteCookie, setCookie } from "@/lib/cookies";
 import { supabase } from "@/lib/supabase";
 import { ApiSuccess } from "@/lib/types";
 
@@ -24,18 +24,37 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
 }
 
 /**
- * Get the best available auth token:
- * 1. Try Supabase session directly (always fresh, handles token refresh)
- * 2. Fall back to cookie (set during login for middleware route protection)
+ * Get a valid Supabase access token.
+ *
+ * We deliberately do NOT fall back to the `faculty_cms_session` cookie here:
+ * that cookie exists only so Next.js middleware can cheaply gate routes, and it
+ * can hold a stale token (access tokens live ~1h but the cookie lives 7d).
+ * Sending a stale token just produces backend 401s. The Supabase session in
+ * storage is the source of truth and auto-refreshes when expired.
+ *
+ * `forceRefresh` explicitly rotates the token — used to recover from tokens that
+ * were signed under an old JWT key (after Supabase key rotation) but haven't
+ * expired yet, so `getSession()` alone wouldn't refresh them.
  */
-async function getToken(): Promise<string | null> {
+async function getToken(forceRefresh = false): Promise<string | null> {
   try {
+    if (forceRefresh) {
+      const { data, error } = await supabase.auth.refreshSession();
+      if (!error && data.session?.access_token) {
+        setCookie(AUTH_COOKIE_KEY, data.session.access_token);
+        return data.session.access_token;
+      }
+    }
+
     const { data } = await supabase.auth.getSession();
-    if (data.session?.access_token) return data.session.access_token;
+    if (data.session?.access_token) {
+      setCookie(AUTH_COOKIE_KEY, data.session.access_token);
+      return data.session.access_token;
+    }
   } catch {
-    // Supabase not available — fall back to cookie
+    // Supabase client unavailable — treat as unauthenticated.
   }
-  return getCookie(AUTH_COOKIE_KEY);
+  return null;
 }
 
 export async function apiFetch<T>(
@@ -44,28 +63,47 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const { body, auth = true, headers, ...rest } = options;
 
-  const finalHeaders = new Headers(headers);
+  const baseHeaders = new Headers(headers);
   let finalBody: BodyInit | null | undefined;
 
   if (body instanceof FormData) {
     finalBody = body;
   } else if (body !== undefined && body !== null) {
-    finalHeaders.set("Content-Type", "application/json");
+    baseHeaders.set("Content-Type", "application/json");
     finalBody = JSON.stringify(body);
   }
 
-  if (auth && !finalHeaders.has("Authorization")) {
-    const token = await getToken();
-    if (token) {
-      finalHeaders.set("Authorization", `Bearer ${token}`);
+  // A caller may pin its own Authorization header (e.g. the login/sync flow that
+  // holds a token before the session is persisted). We must not overwrite it.
+  const callerSuppliedAuth = baseHeaders.has("Authorization");
+
+  const send = async (forceRefresh: boolean) => {
+    const finalHeaders = new Headers(baseHeaders);
+    if (auth && !callerSuppliedAuth) {
+      const token = await getToken(forceRefresh);
+      if (token) finalHeaders.set("Authorization", `Bearer ${token}`);
+    }
+    return fetch(`${API_BASE_URL}${path}`, {
+      ...rest,
+      headers: finalHeaders,
+      body: finalBody,
+    });
+  };
+
+  let response = await send(false);
+
+  // A 401 usually means the token we sent is stale/rotated. Try once more with a
+  // freshly refreshed token before giving up. Skip retry when the caller pinned
+  // its own Authorization header (we can't refresh someone else's token).
+  if (response.status === 401 && auth && !callerSuppliedAuth) {
+    response = await send(true);
+    if (response.status === 401) {
+      // Refresh didn't help — the session is truly dead. Clear it so middleware
+      // sends the user back to login instead of looping on 401s.
+      deleteCookie(AUTH_COOKIE_KEY);
+      supabase.auth.signOut().catch(() => {});
     }
   }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...rest,
-    headers: finalHeaders,
-    body: finalBody,
-  });
 
   const isJson = response.headers.get("content-type")?.includes("application/json");
   const payload = isJson ? await response.json() : null;

@@ -19,11 +19,15 @@ export const syncFaculty = asyncHandler(async (req: Request, res: Response) => {
     throw new AppError("Name must be at least 2 characters.", 400);
   }
 
-  const faculty = await authService.syncFaculty(
+  const faculty = await authService.ensureFaculty(
     req.faculty.facultyId,
-    name.trim(),
-    req.faculty.email
+    req.faculty.email,
+    name.trim()
   );
+
+  if (!faculty) {
+    throw new AppError("Failed to sync faculty profile.", 500);
+  }
 
   sendSuccess(res, 200, "Faculty profile synced.", {
     id: faculty.id,
@@ -41,7 +45,11 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
   if (!req.faculty) {
     throw new AppError("Authentication required.", 401);
   }
-  const faculty = await authService.getProfile(req.faculty.facultyId);
+  const faculty = await authService.getProfile(
+    req.faculty.facultyId,
+    req.faculty.email,
+    req.faculty.name
+  );
   sendSuccess(res, 200, "Profile fetched successfully.", faculty);
 });
 

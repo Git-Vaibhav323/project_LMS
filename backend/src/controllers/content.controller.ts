@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { contentService, uploadToSupabase } from "../services/content.service";
+import { authService } from "../services/auth.service";
 import { asyncHandler } from "../utils/asyncHandler";
 import { sendSuccess } from "../utils/apiResponse";
 import { AppError } from "../utils/AppError";
@@ -35,7 +36,14 @@ function requireFacultyId(req: Request): string {
 
 export const createContent = asyncHandler(async (req: Request, res: Response) => {
   const facultyId = requireFacultyId(req);
-  const content = await contentService.create(facultyId, req.body, await buildFileMeta(req));
+  // Guarantee the faculty row exists so the content FK can never fail, even if
+  // the post-login sync was missed. Run it alongside the file upload so the DB
+  // check overlaps the (network-bound) storage upload instead of adding to it.
+  const [, fileMeta] = await Promise.all([
+    authService.ensureFaculty(facultyId, req.faculty!.email, req.faculty!.name),
+    buildFileMeta(req),
+  ]);
+  const content = await contentService.create(facultyId, req.body, fileMeta);
   sendSuccess(res, 201, "Content uploaded successfully.", content);
 });
 

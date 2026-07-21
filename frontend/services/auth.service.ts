@@ -10,22 +10,32 @@ export const authService = {
     const { data, error } = await supabase.auth.signUp({
       email: input.email,
       password: input.password,
+      // Persist the name in user metadata so the backend can materialize the
+      // Faculty row itself — no blocking round-trip needed before navigation.
+      options: { data: { name: input.name } },
     });
 
     if (error) throw new Error(error.message);
     if (!data.session) throw new Error("Check your email to confirm your account.");
 
-    // Sync Faculty row using the Supabase access token
-    const faculty = await apiFetch<ApiSuccess<Faculty>>("/api/auth/sync", {
+    // Kick off the Faculty-row sync but don't block on it: the backend also
+    // self-heals the row on /me and on content creation.
+    void apiFetch<ApiSuccess<Faculty>>("/api/auth/sync", {
       method: "POST",
       body: { name: input.name },
       auth: false,
-      headers: {
-        Authorization: `Bearer ${data.session.access_token}`,
-      },
-    });
+      headers: { Authorization: `Bearer ${data.session.access_token}` },
+    }).catch(() => {});
 
-    return { faculty: faculty.data, token: data.session.access_token };
+    return {
+      faculty: {
+        id: data.user?.id ?? "",
+        name: input.name,
+        email: data.user?.email ?? input.email,
+        createdAt: data.user?.created_at ?? new Date().toISOString(),
+      } as Faculty,
+      token: data.session.access_token,
+    };
   },
 
   /**
@@ -40,14 +50,13 @@ export const authService = {
     if (error) throw new Error(error.message);
     if (!data.session) throw new Error("Login failed. Please try again.");
 
-    // Ensure Faculty row exists (handles users created before this migration)
-    await apiFetch<ApiSuccess<Faculty>>("/api/auth/sync", {
+    // Ensure the Faculty row exists, but don't block sign-in on it: the backend
+    // self-heals on /me and on content creation, so we fire-and-forget here.
+    void apiFetch<ApiSuccess<Faculty>>("/api/auth/sync", {
       method: "POST",
       body: { name: data.user.user_metadata?.name ?? data.user.email ?? "Faculty" },
       auth: false,
-      headers: {
-        Authorization: `Bearer ${data.session.access_token}`,
-      },
+      headers: { Authorization: `Bearer ${data.session.access_token}` },
     }).catch(() => {}); // non-fatal if already exists
 
     return {
