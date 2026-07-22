@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { authService } from "@/services/auth.service";
 import { ApiRequestError } from "@/services/api";
-import { AUTH_COOKIE_KEY } from "@/lib/constants";
+import { API_BASE_URL, AUTH_COOKIE_KEY } from "@/lib/constants";
 import { deleteCookie, setCookie } from "@/lib/cookies";
 import { Faculty } from "@/lib/types";
 
@@ -33,6 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Wake the backend as early as possible. The free host spins down when
+    // idle, so we kick off a lightweight /health request the moment the app
+    // loads (e.g. while the user is still typing on the login screen). By the
+    // time they reach the dashboard the instance is already warm, so the first
+    // data fetch returns immediately instead of waiting on a cold start.
+    fetch(`${API_BASE_URL}/health`, { cache: "no-store" }).catch(() => {});
+
     // On mount, restore session from Supabase (handles page reloads)
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
